@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Template;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProjectRequest extends FormRequest
@@ -15,7 +16,16 @@ class StoreProjectRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'template_id' => ['required', 'exists:templates,id'],
+            'template_id' => [
+                'required',
+                'exists:templates,id',
+                function ($attribute, $value, $fail) {
+                    $template = Template::find($value);
+                    if (!$template || (!$this->user()->isAdmin() && $template->created_by !== $this->user()->id)) {
+                        $fail('The selected template does not belong to you.');
+                    }
+                },
+            ],
             'title_text' => ['nullable', 'string', 'max:500'],
             'certificate_date' => ['nullable', 'date'],
             'certificate_prefix' => ['required', 'string', 'max:100'],

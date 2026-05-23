@@ -25,7 +25,7 @@ class SettingsController extends Controller
                 'mail_port' => Setting::get('mail_port', '587'),
                 'mail_encryption' => Setting::get('mail_encryption', 'tls'),
                 'mail_username' => Setting::get('mail_username'),
-                'mail_password' => Setting::get('mail_password'),
+                'mail_password' => Setting::get('mail_password') ? '********' : null,
                 'mail_from_address' => Setting::get('mail_from_address'),
                 'mail_from_name' => Setting::get('mail_from_name', config('app.name')),
             ],
@@ -64,7 +64,7 @@ class SettingsController extends Controller
 
         if ($request->hasFile('favicon')) {
             $request->validate([
-                'favicon' => ['nullable', 'mimes:png,svg', 'max:1024'],
+                'favicon' => ['nullable', 'mimes:png', 'max:1024'],
             ]);
 
             $old = Setting::get('favicon');
@@ -77,13 +77,17 @@ class SettingsController extends Controller
         }
 
         Setting::set('mail_mailer', $request->mail_mailer ?? 'smtp');
-        Setting::set('mail_host', $request->mail_host);
-        Setting::set('mail_port', $request->mail_port);
         Setting::set('mail_encryption', $request->mail_encryption ?? 'tls');
-        Setting::set('mail_username', $request->mail_username);
-        Setting::set('mail_password', $request->mail_password);
-        Setting::set('mail_from_address', $request->mail_from_address);
-        Setting::set('mail_from_name', $request->mail_from_name);
+
+        foreach (['mail_host', 'mail_port', 'mail_username', 'mail_from_address', 'mail_from_name'] as $field) {
+            if ($request->$field !== null) {
+                Setting::set($field, $request->$field);
+            }
+        }
+
+        if ($request->filled('mail_password') && $request->mail_password !== '********') {
+            Setting::set('mail_password', $request->mail_password);
+        }
 
         return redirect()->route('settings.index')
             ->with('success', 'Settings updated successfully.');
@@ -111,7 +115,8 @@ class SettingsController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Test email sent successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to send test email: ' . $e->getMessage()], 500);
+            \Illuminate\Support\Facades\Log::error('Test email failed', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to send test email. Check server logs for details.'], 500);
         }
     }
 }

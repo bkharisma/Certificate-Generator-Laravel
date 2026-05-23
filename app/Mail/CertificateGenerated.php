@@ -56,12 +56,12 @@ class CertificateGenerated extends Mailable
     public function attachments(): array
     {
         $path = $this->recipient->certificate_path;
-        if (!$path || !Storage::disk('public')->exists($path)) {
+        if (!$path || !Storage::disk('local')->exists($path)) {
             return [];
         }
 
         return [
-            Attachment::fromStorageDisk('public', $path)
+            Attachment::fromStorageDisk('local', $path)
                 ->as($this->recipient->certificate_number . '.pdf')
                 ->withMime('application/pdf'),
         ];

@@ -109,6 +109,7 @@ class ProjectController extends Controller
         $this->authorizeProject($project);
 
         $templates = Template::select('id', 'name', 'page_width', 'page_height', 'orientation')
+            ->when(!request()->user()->isAdmin(), fn ($q) => $q->where('created_by', request()->user()->id))
             ->latest()
             ->get();
 
@@ -139,10 +140,29 @@ class ProjectController extends Controller
                 ->with('error', 'Cannot delete project that has generated certificates.');
         }
 
+        foreach ($project->signatures as $signature) {
+            Storage::disk('public')->delete($signature->signature_image);
+        }
         $project->signatures()->delete();
+
+        foreach ($project->logos as $logo) {
+            Storage::disk('public')->delete($logo->logo_image);
+        }
         $project->logos()->delete();
+
+        foreach ($project->recipients as $recipient) {
+            if ($recipient->certificate_path) {
+                Storage::disk('local')->delete($recipient->certificate_path);
+            }
+        }
         $project->recipients()->delete();
-        $project->trainingMaterial()?->delete();
+
+        if ($project->trainingMaterial) {
+            if ($project->trainingMaterial->background_image) {
+                Storage::disk('public')->delete($project->trainingMaterial->background_image);
+            }
+            $project->trainingMaterial->delete();
+        }
         $project->delete();
 
         return redirect()->route('projects.index')
@@ -172,6 +192,10 @@ class ProjectController extends Controller
     {
         $this->authorizeProject($project);
 
+        if ($logo->project_id !== $project->id) {
+            abort(404);
+        }
+
         if ($request->hasFile('logo')) {
             Storage::disk('public')->delete($logo->logo_image);
 
@@ -185,6 +209,10 @@ class ProjectController extends Controller
     public function destroyLogo(Project $project, ProjectLogo $logo): RedirectResponse
     {
         $this->authorizeProject($project);
+
+        if ($logo->project_id !== $project->id) {
+            abort(404);
+        }
 
         Storage::disk('public')->delete($logo->logo_image);
         $logo->delete();
@@ -217,6 +245,10 @@ class ProjectController extends Controller
     {
         $this->authorizeProject($project);
 
+        if ($signature->project_id !== $project->id) {
+            abort(404);
+        }
+
         if ($request->hasFile('signature')) {
             Storage::disk('public')->delete($signature->signature_image);
 
@@ -232,6 +264,10 @@ class ProjectController extends Controller
     public function destroySignature(Project $project, ProjectSignature $signature): RedirectResponse
     {
         $this->authorizeProject($project);
+
+        if ($signature->project_id !== $project->id) {
+            abort(404);
+        }
 
         Storage::disk('public')->delete($signature->signature_image);
         $signature->delete();
@@ -297,11 +333,19 @@ class ProjectController extends Controller
                     'status' => 'generated',
                 ]);
                 $generated++;
-
-                SendCertificateEmailJob::dispatch($recipient);
             } catch (\Exception $e) {
                 $errors++;
                 \Illuminate\Support\Facades\Log::error('Certificate generation failed', [
+                    'recipient_id' => $recipient->id,
+                    'error' => $e->getMessage(),
+                ]);
+                continue;
+            }
+
+            try {
+                SendCertificateEmailJob::dispatch($recipient);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Certificate email dispatch failed', [
                     'recipient_id' => $recipient->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -327,14 +371,14 @@ class ProjectController extends Controller
 
         try {
             $path = $generator->generatePreview($project);
-            $fullPath = Storage::disk('public')->path($path);
+            $fullPath = Storage::disk('local')->path($path);
             return response()->file($fullPath);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Certificate preview failed', [
                 'project_id' => $project->id,
                 'error' => $e->getMessage(),
             ]);
-            return redirect()->back()->with('error', 'Failed to generate preview: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate preview. Please try again.');
         }
     }
 
@@ -358,18 +402,25 @@ class ProjectController extends Controller
             ]);
 
             $project->update(['status' => 'active']);
-
-            SendCertificateEmailJob::dispatch($recipient);
-
-            return redirect()->back()->with('success', "Certificate generated for {$recipient->name}.");
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Certificate generation failed', [
                 'recipient_id' => $recipient->id,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to generate certificate: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate certificate. Please try again.');
         }
+
+        try {
+            SendCertificateEmailJob::dispatch($recipient);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Certificate email dispatch failed', [
+                'recipient_id' => $recipient->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Certificate generated for {$recipient->name}.");
     }
 
     public function regenerate(Project $project, Recipient $recipient, CertificateGenerator $generator): RedirectResponse
@@ -387,7 +438,7 @@ class ProjectController extends Controller
 
         try {
             if ($recipient->certificate_path) {
-                Storage::disk('public')->delete($recipient->certificate_path);
+                Storage::disk('local')->delete($recipient->certificate_path);
             }
 
             $path = $generator->generate($project, $recipient);
@@ -397,18 +448,25 @@ class ProjectController extends Controller
                 'revoked_at' => null,
                 'revoke_reason' => null,
             ]);
-
-            SendCertificateEmailJob::dispatch($recipient);
-
-            return redirect()->back()->with('success', "Certificate regenerated for {$recipient->name}.");
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Certificate regeneration failed', [
                 'recipient_id' => $recipient->id,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to regenerate certificate: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to regenerate certificate. Please try again.');
         }
+
+        try {
+            SendCertificateEmailJob::dispatch($recipient);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Certificate email dispatch failed', [
+                'recipient_id' => $recipient->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Certificate regenerated for {$recipient->name}.");
     }
 
     public function revokeSingle(Request $request, Project $project, Recipient $recipient): RedirectResponse
@@ -454,7 +512,7 @@ class ProjectController extends Controller
         foreach ($recipients as $recipient) {
             try {
                 if ($recipient->certificate_path) {
-                    Storage::disk('public')->delete($recipient->certificate_path);
+                    Storage::disk('local')->delete($recipient->certificate_path);
                 }
 
                 $path = $generator->generate($project, $recipient);
@@ -534,7 +592,15 @@ class ProjectController extends Controller
             return redirect()->back()->with('error', 'Email template is not configured. Please set email subject and body in project settings.');
         }
 
-        SendCertificateEmailJob::dispatch($recipient);
+        try {
+            SendCertificateEmailJob::dispatch($recipient);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Certificate email dispatch failed', [
+                'recipient_id' => $recipient->id,
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Failed to send email. Check server logs for details.');
+        }
 
         return redirect()->back()->with('success', "Email queued for {$recipient->name}.");
     }
@@ -557,12 +623,26 @@ class ProjectController extends Controller
         }
 
         $queued = 0;
+        $errors = 0;
         foreach ($recipients as $recipient) {
-            SendCertificateEmailJob::dispatch($recipient);
-            $queued++;
+            try {
+                SendCertificateEmailJob::dispatch($recipient);
+                $queued++;
+            } catch (\Exception $e) {
+                $errors++;
+                \Illuminate\Support\Facades\Log::warning('Certificate email dispatch failed', [
+                    'recipient_id' => $recipient->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
-        return redirect()->back()->with('success', "{$queued} email(s) queued for delivery.");
+        $message = "{$queued} email(s) queued for delivery.";
+        if ($errors > 0) {
+            $message .= " {$errors} failed.";
+        }
+
+        return redirect()->back()->with($errors > 0 && $queued === 0 ? 'error' : 'success', $message);
     }
 
     public function downloadZip(Project $project)
@@ -587,8 +667,8 @@ class ProjectController extends Controller
 
         $added = 0;
         foreach ($recipients as $recipient) {
-            if ($recipient->certificate_path && Storage::disk('public')->exists($recipient->certificate_path)) {
-                $fullPath = Storage::disk('public')->path($recipient->certificate_path);
+            if ($recipient->certificate_path && Storage::disk('local')->exists($recipient->certificate_path)) {
+                $fullPath = Storage::disk('local')->path($recipient->certificate_path);
                 $fileName = str_replace('/', '_', $recipient->certificate_number) . '.pdf';
                 $zip->addFile($fullPath, $fileName);
                 $added++;

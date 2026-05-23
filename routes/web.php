@@ -13,9 +13,7 @@ use App\Models\Template;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/cert/{certificateNumber}/inline', [CertificateController::class, 'inline'])->where('certificateNumber', '.*')->name('cert.inline');
-Route::get('/cert/{certificateNumber}/download', [CertificateController::class, 'download'])->where('certificateNumber', '.*')->name('cert.download');
-Route::get('/cert/{certificateNumber}', [CertificateController::class, 'show'])->where('certificateNumber', '.*')->name('cert.show');
+Route::get('/cert/{certificateNumber}', [CertificateController::class, 'show'])->middleware('throttle:30,1')->where('certificateNumber', '.*')->name('cert.show');
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -120,9 +118,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/certificates/{recipient}', [CertificateController::class, 'showDetail'])->name('certificates.show');
     Route::post('/certificates/{recipient}/revoke', [CertificateController::class, 'revoke'])->name('certificates.revoke');
     Route::post('/certificates/{recipient}/regenerate', [CertificateController::class, 'regenerate'])->name('certificates.regenerate');
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
-    Route::post('/settings/test-mail', [SettingsController::class, 'testMail'])->name('settings.test-mail');
 });
 
 Route::middleware('auth')->group(function () {
@@ -137,6 +132,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/users/bulk', [UserController::class, 'bulkStore'])->name('users.bulk');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/test-mail', [SettingsController::class, 'testMail'])->name('settings.test-mail');
 });
 
 require __DIR__.'/auth.php';

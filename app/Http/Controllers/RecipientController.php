@@ -52,9 +52,22 @@ class RecipientController extends Controller
             return redirect()->back()->with('error', 'A recipient with this email already exists in this project.');
         }
 
-        $nextNumber = $project->certificate_next_number;
-        $certificateNumber = $project->certificate_prefix . '/' .
-            str_pad((string) $nextNumber, $project->certificate_digit_count, '0', STR_PAD_LEFT);
+        $prefix = $project->certificate_prefix;
+        $digitCount = $project->certificate_digit_count;
+        $baseNumber = $project->certificate_next_number;
+
+        $certificateNumber = null;
+        for ($i = 0; $i < 1000; $i++) {
+            $candidate = $prefix . '/' . str_pad((string)($baseNumber + $i), $digitCount, '0', STR_PAD_LEFT);
+            if (!Recipient::where('certificate_number', $candidate)->exists()) {
+                $certificateNumber = $candidate;
+                break;
+            }
+        }
+
+        if (!$certificateNumber) {
+            return redirect()->back()->with('error', 'Unable to generate unique certificate number. Please try again.');
+        }
 
         $project->recipients()->create([
             'name' => $request->name,
@@ -64,7 +77,7 @@ class RecipientController extends Controller
             'email_status' => 'pending',
         ]);
 
-        $project->increment('certificate_next_number');
+        $project->increment('certificate_next_number', $i + 1);
 
         return redirect()->back()->with('success', 'Recipient added successfully.');
     }

@@ -84,7 +84,7 @@
         </div>
 
         <div class="body-content">
-            {!! nl2br($body) !!}
+            {!! $body !!}
         </div>
 
         <div style="text-align: center;">

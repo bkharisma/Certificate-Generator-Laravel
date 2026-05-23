@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['project_id', 'name', 'email', 'certificate_number', 'certificate_path', 'status', 'email_status', 'email_sent_at', 'revoked_at', 'revoke_reason'])]
+#[Fillable(['project_id', 'name', 'email', 'certificate_number', 'status', 'email_status', 'certificate_path', 'revoked_at', 'revoke_reason', 'email_sent_at'])]
 class Recipient extends Model
 {
     use HasFactory;

@@ -1,6 +1,6 @@
-import { Link, router } from '@inertiajs/react';
-import { Head } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { sanitizeHtml } from '@/lib/utils';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
@@ -367,8 +367,9 @@ export default function Index({ users, availableRoles }: { users: PaginatedData;
                                 onClick={() => {
                                     if (link.url) router.get(link.url, {}, { preserveScroll: true });
                                 }}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                            >
+                                {sanitizeHtml(link.label)}
+                            </Button>
                         ))}
                     </div>
                 )}

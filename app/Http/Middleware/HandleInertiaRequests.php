@@ -35,7 +35,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user()
-                    ? array_merge($request->user()->toArray(), [
+                    ? array_merge($request->user()->only(['id', 'name', 'email', 'email_verified_at']), [
                         'roles' => $request->user()->getRoleNames()->toArray(),
                     ])
                     : null,

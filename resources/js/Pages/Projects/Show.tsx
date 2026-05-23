@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { sanitizeHtml } from '@/lib/utils';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -1202,8 +1203,9 @@ export default function Show({
                                         onClick={() => {
                                             if (link.url) router.get(link.url, {}, { preserveScroll: true });
                                         }}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
+                                    >
+                                        {sanitizeHtml(link.label)}
+                                    </Button>
                                 ))}
                             </div>
                         )}
@@ -1874,7 +1876,7 @@ export default function Show({
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
-                                                                        onClick={() => window.open(`/storage/${r.certificate_path}`, '_blank')}
+                                                                        onClick={() => window.open(`/cert/${r.certificate_number}?download=1`, '_blank')}
                                                                     >
                                                                         <Download className="h-3 w-3 mr-1" />
                                                                         PDF
@@ -1959,8 +1961,9 @@ export default function Show({
                                         onClick={() => {
                                             if (link.url) router.get(link.url, {}, { preserveScroll: true });
                                         }}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
+                                    >
+                                        {sanitizeHtml(link.label)}
+                                    </Button>
                                 ))}
                             </div>
                         )}

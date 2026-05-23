@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode } from 'react';
 import type { User as UserType } from '@/types';
 import {
@@ -198,7 +198,7 @@ export default function AuthenticatedLayout({
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     className="flex items-center gap-2"
-                                    onClick={() => window.location.href = route('profile.edit')}
+                                    onClick={() => router.visit(route('profile.edit'))}
                                 >
                                     <User className="h-4 w-4" />
                                     Profile

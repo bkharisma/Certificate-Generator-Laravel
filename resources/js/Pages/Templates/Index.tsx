@@ -1,6 +1,6 @@
-import { Link, router } from '@inertiajs/react';
-import { Head } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { sanitizeHtml } from '@/lib/utils';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import {
@@ -165,8 +165,9 @@ export default function Index({ templates }: { templates: PaginatedData }) {
                                 onClick={() => {
                                     if (link.url) router.get(link.url, {}, { preserveScroll: true });
                                 }}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                            >
+                                {sanitizeHtml(link.label)}
+                            </Button>
                         ))}
                     </div>
                 )}

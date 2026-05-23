@@ -205,7 +205,7 @@ class TemplateController extends Controller
 
         $request->validate([
             'type' => ['required', 'in:signature,logo'],
-            'image' => ['required', 'image', 'mimes:png,jpg,jpeg,gif,svg', 'max:5120'],
+            'image' => ['required', 'image', 'mimes:png,jpg,jpeg,gif', 'max:5120'],
         ]);
 
         $element = $template->elements()->where('type', $request->type)->first();
@@ -250,6 +250,10 @@ class TemplateController extends Controller
 
     public function preview(Template $template): Response
     {
+        if (!request()->user()->isAdmin() && $template->created_by !== request()->user()->id) {
+            abort(403);
+        }
+
         $template->load('elements');
 
         return Inertia::render('Templates/Show', [

@@ -450,7 +450,7 @@ export default function Designer({ template }: { template: Template }) {
             const response = await fetch(route('templates.elements.image.upload', template.id), {
                 method: 'POST',
                 headers: {
-                    'X-XSRF-TOKEN': getCsrfToken(),
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     'Accept': 'application/json',
                 },
                 credentials: 'include',
@@ -506,7 +506,7 @@ export default function Designer({ template }: { template: Template }) {
             const response = await fetch(route('templates.elements.image.delete', template.id), {
                 method: 'DELETE',
                 headers: {
-                    'X-XSRF-TOKEN': getCsrfToken(),
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },

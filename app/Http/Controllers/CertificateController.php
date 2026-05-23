@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class CertificateController extends Controller
 {
@@ -83,11 +82,9 @@ class CertificateController extends Controller
         }
 
         $certPath = $recipient->certificate_path;
-        $pdfUrl = null;
-
-        if ($certPath && Storage::disk('public')->exists($certPath)) {
-            $pdfUrl = route('cert.inline', $recipient->certificate_number);
-        }
+        $showUrl = $certPath && Storage::disk('local')->exists($certPath)
+            ? route('cert.show', $recipient->certificate_number)
+            : null;
 
         $orgName = Setting::get('org_name', config('app.name'));
 
@@ -104,8 +101,8 @@ class CertificateController extends Controller
                 'revoke_reason' => $recipient->revoke_reason,
                 'created_at' => $recipient->created_at->format('d F Y'),
                 'certificate_path' => $recipient->certificate_path,
-                'pdf_url' => $pdfUrl,
-                'download_url' => route('cert.download', $recipient->certificate_number),
+                'pdf_url' => $showUrl ? $showUrl . '?inline=1' : null,
+                'download_url' => $showUrl ? $showUrl . '?download=1' : null,
                 'project_name' => $recipient->project->name,
                 'project_id' => $recipient->project->id,
                 'template_name' => $recipient->project->template?->name,
@@ -153,7 +150,7 @@ class CertificateController extends Controller
 
         try {
             if ($recipient->certificate_path) {
-                Storage::disk('public')->delete($recipient->certificate_path);
+                Storage::disk('local')->delete($recipient->certificate_path);
             }
 
             $path = $generator->generate($recipient->project, $recipient);
@@ -171,7 +168,7 @@ class CertificateController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to regenerate certificate: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to regenerate certificate. Please try again.');
         }
     }
 
@@ -200,11 +197,29 @@ class CertificateController extends Controller
         }
 
         $certPath = $recipient->certificate_path;
-        $pdfUrl = null;
 
-        if ($certPath && Storage::disk('public')->exists($certPath)) {
-            $pdfUrl = route('cert.inline', $recipient->certificate_number);
+        if (!$certPath || !Storage::disk('local')->exists($certPath)) {
+            abort(404);
         }
+
+        $fullPath = Storage::disk('local')->path($certPath);
+
+        if (request('download')) {
+            $fileName = str_replace('/', '_', $recipient->certificate_number) . '.pdf';
+            return response()->file($fullPath, [
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            ]);
+        }
+
+        if (request('inline')) {
+            $fileName = str_replace('/', '_', $recipient->certificate_number) . '.pdf';
+            return response()->file($fullPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "inline; filename=\"{$fileName}\"",
+            ]);
+        }
+
+        $showUrl = route('cert.show', $recipient->certificate_number);
 
         $date = $recipient->project->certificate_date
             ? \Carbon\Carbon::parse($recipient->project->certificate_date)->locale('id')->isoFormat('D MMMM YYYY')
@@ -215,57 +230,9 @@ class CertificateController extends Controller
             'recipientName' => $recipient->name,
             'projectName' => $recipient->project->name,
             'date' => $date,
-            'pdfUrl' => $pdfUrl,
+            'pdfUrl' => $showUrl . '?inline=1',
             'orgName' => Setting::get('org_name', config('app.name')),
-            'downloadUrl' => route('cert.download', $recipient->certificate_number),
-        ]);
-    }
-
-    public function download(string $certificateNumber): BinaryFileResponse
-    {
-        $recipient = Recipient::where('certificate_number', $certificateNumber)->first();
-
-        if (!$recipient) {
-            abort(404);
-        }
-
-        if (!in_array($recipient->status, ['generated', 'sent'])) {
-            abort(404);
-        }
-
-        $certPath = $recipient->certificate_path;
-
-        if (!$certPath || !Storage::disk('public')->exists($certPath)) {
-            abort(404);
-        }
-
-        $fullPath = Storage::disk('public')->path($certPath);
-        $fileName = str_replace('/', '_', $recipient->certificate_number) . '.pdf';
-
-        return response()->file($fullPath, [
-            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-        ]);
-    }
-
-    public function inline(string $certificateNumber): BinaryFileResponse
-    {
-        $recipient = Recipient::where('certificate_number', $certificateNumber)->first();
-
-        if (!$recipient || !in_array($recipient->status, ['generated', 'sent'])) {
-            abort(404);
-        }
-
-        $certPath = $recipient->certificate_path;
-
-        if (!$certPath || !Storage::disk('public')->exists($certPath)) {
-            abort(404);
-        }
-
-        $fullPath = Storage::disk('public')->path($certPath);
-
-        return response()->file($fullPath, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline',
+            'downloadUrl' => $showUrl . '?download=1',
         ]);
     }
 }

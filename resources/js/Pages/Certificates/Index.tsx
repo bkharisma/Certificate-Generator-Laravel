@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { sanitizeHtml } from '@/lib/utils';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -82,14 +83,15 @@ export default function Index({
     const [revokeReason, setRevokeReason] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    function applyFilters() {
+    function applyFilters(overrides: Record<string, string> = {}) {
         const params: Record<string, string> = {};
-        if (search) params.search = search;
-        if (projectFilter) params.project = projectFilter;
-        if (statusFilter) params.status = statusFilter;
-        if (emailFilter) params.email_status = emailFilter;
-        params.sort = sortField;
-        params.dir = sortDir;
+        const s = { ...{ search, projectFilter, statusFilter, emailFilter, sortField, sortDir }, ...overrides };
+        if (s.search) params.search = s.search;
+        if (s.projectFilter) params.project = s.projectFilter;
+        if (s.statusFilter) params.status = s.statusFilter;
+        if (s.emailFilter) params.email_status = s.emailFilter;
+        params.sort = s.sortField;
+        params.dir = s.sortDir;
 
         router.get(route('certificates.index'), params, { preserveState: true, preserveScroll: true });
     }
@@ -100,13 +102,11 @@ export default function Index({
     }
 
     function toggleSort(field: string) {
-        if (sortField === field) {
-            setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDir('asc');
-        }
-        setTimeout(applyFilters, 0);
+        const newDir = sortField === field ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc';
+        const newField = sortField === field ? sortField : field;
+        setSortField(newField);
+        setSortDir(newDir);
+        applyFilters({ sortField: newField, sortDir: newDir });
     }
 
     function handleRevoke() {
@@ -175,7 +175,7 @@ export default function Index({
                         />
                     </form>
 
-                    <Select value={projectFilter} onValueChange={v => { setProjectFilter(v ?? ''); setTimeout(applyFilters, 0); }}>
+                    <Select value={projectFilter} onValueChange={v => { setProjectFilter(v ?? ''); applyFilters({ projectFilter: v ?? '' }); }}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="All Projects" />
                         </SelectTrigger>
@@ -187,7 +187,7 @@ export default function Index({
                         </SelectContent>
                     </Select>
 
-                    <Select value={statusFilter} onValueChange={v => { setStatusFilter(v ?? ''); setTimeout(applyFilters, 0); }}>
+                    <Select value={statusFilter} onValueChange={v => { setStatusFilter(v ?? ''); applyFilters({ statusFilter: v ?? '' }); }}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="All Status" />
                         </SelectTrigger>
@@ -199,7 +199,7 @@ export default function Index({
                         </SelectContent>
                     </Select>
 
-                    <Select value={emailFilter} onValueChange={v => { setEmailFilter(v ?? ''); setTimeout(applyFilters, 0); }}>
+                    <Select value={emailFilter} onValueChange={v => { setEmailFilter(v ?? ''); applyFilters({ emailFilter: v ?? '' }); }}>
                         <SelectTrigger className="w-[160px]">
                             <SelectValue placeholder="Email Status" />
                         </SelectTrigger>
@@ -290,7 +290,7 @@ export default function Index({
                                                         </Button>
                                                     </Link>
                                                     {cert.certificate_path && (
-                                                        <a href={`/storage/${cert.certificate_path}`} target="_blank" download>
+                                                        <a href={`/cert/${cert.certificate_number}?download=1`} target="_blank" download>
                                                             <Button variant="ghost" size="icon-sm">
                                                                 <Download className="h-3 w-3" />
                                                             </Button>
@@ -334,8 +334,9 @@ export default function Index({
                                 onClick={() => {
                                     if (link.url) router.get(link.url, {}, { preserveScroll: true });
                                 }}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                            >
+                                {sanitizeHtml(link.label)}
+                            </Button>
                         ))}
                     </div>
                 )}

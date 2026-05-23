@@ -91,7 +91,7 @@ export default function Index({ settings }: { settings: Settings }) {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-XSRF-TOKEN': getCsrfToken(),
+                    'X-CSRF-TOKEN': getCsrfToken(),
                 },
                 credentials: 'include',
                 body: JSON.stringify({ test_email: testEmail }),

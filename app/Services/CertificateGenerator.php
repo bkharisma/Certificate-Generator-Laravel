@@ -15,11 +15,11 @@ class CertificateGenerator
         $pdfContent = $this->buildPdf($project, $recipient);
 
         $certDir = "certificates/{$project->id}";
-        Storage::disk('public')->makeDirectory($certDir);
+        Storage::disk('local')->makeDirectory($certDir);
 
         $fileName = str_replace('/', '_', $recipient->certificate_number) . '.pdf';
         $filePath = "{$certDir}/{$fileName}";
-        Storage::disk('public')->put($filePath, $pdfContent);
+        Storage::disk('local')->put($filePath, $pdfContent);
 
         return $filePath;
     }
@@ -29,10 +29,10 @@ class CertificateGenerator
         $pdfContent = $this->buildPdf($project, null);
 
         $previewDir = "previews/{$project->id}";
-        Storage::disk('public')->makeDirectory($previewDir);
+        Storage::disk('local')->makeDirectory($previewDir);
 
         $filePath = "{$previewDir}/preview.pdf";
-        Storage::disk('public')->put($filePath, $pdfContent);
+        Storage::disk('local')->put($filePath, $pdfContent);
 
         return $filePath;
     }
