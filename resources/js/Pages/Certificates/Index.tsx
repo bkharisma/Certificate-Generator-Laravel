@@ -164,8 +164,8 @@ export default function Index({
                     </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <form onSubmit={handleSearch} className="relative flex-1 min-w-[200px] max-w-sm">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+                    <form onSubmit={handleSearch} className="relative flex-1 min-w-0 w-full sm:max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Search by name or certificate number..."
@@ -175,41 +175,43 @@ export default function Index({
                         />
                     </form>
 
-                    <Select value={projectFilter} onValueChange={v => { setProjectFilter(v ?? ''); applyFilters({ projectFilter: v ?? '' }); }}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="All Projects" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="">All Projects</SelectItem>
-                            {projects.map(p => (
-                                <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Select value={projectFilter} onValueChange={v => { setProjectFilter(v ?? ''); applyFilters({ projectFilter: v ?? '' }); }}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="All Projects" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">All Projects</SelectItem>
+                                {projects.map(p => (
+                                    <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
 
-                    <Select value={statusFilter} onValueChange={v => { setStatusFilter(v ?? ''); applyFilters({ statusFilter: v ?? '' }); }}>
-                        <SelectTrigger className="w-[150px]">
-                            <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="">All Status</SelectItem>
-                            <SelectItem value="generated">Generated</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="revoked">Revoked</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v ?? ''); applyFilters({ statusFilter: v ?? '' }); }}>
+                            <SelectTrigger className="flex-1 sm:w-[150px]">
+                                <SelectValue placeholder="All Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">All Status</SelectItem>
+                                <SelectItem value="generated">Generated</SelectItem>
+                                <SelectItem value="sent">Sent</SelectItem>
+                                <SelectItem value="revoked">Revoked</SelectItem>
+                            </SelectContent>
+                        </Select>
 
-                    <Select value={emailFilter} onValueChange={v => { setEmailFilter(v ?? ''); applyFilters({ emailFilter: v ?? '' }); }}>
-                        <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="Email Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="">All Email</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="failed">Failed</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Select value={emailFilter} onValueChange={v => { setEmailFilter(v ?? ''); applyFilters({ emailFilter: v ?? '' }); }}>
+                            <SelectTrigger className="flex-1 sm:w-[160px]">
+                                <SelectValue placeholder="Email Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">All Email</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="sent">Sent</SelectItem>
+                                <SelectItem value="failed">Failed</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {certificates.data.length === 0 ? (
@@ -225,7 +227,79 @@ export default function Index({
                 ) : (
                     <Card>
                         <CardContent className="p-0">
-                            <table className="w-full text-sm">
+                            {/* Mobile card view */}
+                            <div className="divide-y md:hidden">
+                                {certificates.data.map((cert) => (
+                                    <div key={cert.id} className="p-4 space-y-3">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium truncate">{cert.name}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{cert.email}</p>
+                                            </div>
+                                            <Badge variant="outline" className={`${STATUS_BADGE[cert.status] || ''} shrink-0`}>
+                                                {cert.status === 'generated' && <CheckCircle2 className="h-3 w-3 mr-1 inline" />}
+                                                {cert.status === 'sent' && <Mail className="h-3 w-3 mr-1 inline" />}
+                                                {cert.status === 'revoked' && <Ban className="h-3 w-3 mr-1 inline" />}
+                                                {cert.status}
+                                            </Badge>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Cert. No.</p>
+                                                <p className="font-mono text-xs truncate">{cert.certificate_number}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Project</p>
+                                                <p className="text-xs truncate">{cert.project.name}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Email</p>
+                                                <Badge variant="outline" className={`${EMAIL_STATUS_BADGE[cert.email_status] || ''} text-xs`}>
+                                                    {cert.email_status}
+                                                </Badge>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Date</p>
+                                                <p className="text-xs">{cert.created_at}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-end gap-1 pt-2 border-t">
+                                            <Link href={route('certificates.show', cert.id)}>
+                                                <Button variant="ghost" size="icon-sm">
+                                                    <ExternalLink className="h-3 w-3" />
+                                                </Button>
+                                            </Link>
+                                            {cert.certificate_path && (
+                                                <a href={`/cert/${cert.certificate_number}?download=1`} target="_blank" download>
+                                                    <Button variant="ghost" size="icon-sm">
+                                                        <Download className="h-3 w-3" />
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => handleRegenerate(cert)}
+                                                disabled={!['pending', 'revoked'].includes(cert.status)}
+                                            >
+                                                <RotateCcw className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                className="text-destructive hover:text-destructive"
+                                                onClick={() => setRevokeModal({ open: true, cert })}
+                                                disabled={!['generated', 'sent'].includes(cert.status)}
+                                            >
+                                                <Ban className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop table view */}
+                            <table className="hidden md:table w-full text-sm">
                                 <thead>
                                     <tr className="border-b">
                                         <th

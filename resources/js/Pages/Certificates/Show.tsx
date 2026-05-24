@@ -105,7 +105,7 @@ export default function Show({ certificate }: { certificate: {
             <Head title={`Certificate - ${certificate.name}`} />
 
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <Link
                             href={route('certificates.index')}
@@ -121,38 +121,40 @@ export default function Show({ certificate }: { certificate: {
                     </div>
 
                     {isActive && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                             {certificate.pdf_url && (
-                                <a href={certificate.download_url} target="_blank">
-                                    <Button variant="outline">
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Download PDF
+                                <a href={certificate.download_url} target="_blank" className="sm:inline-block">
+                                    <Button variant="outline" className="w-full sm:w-auto">
+                                        <Download className="h-4 w-4 sm:mr-2" />
+                                        <span className="hidden sm:inline">Download PDF</span>
                                     </Button>
                                 </a>
                             )}
                             <Button
                                 variant="destructive"
                                 onClick={() => setRevokeOpen(true)}
+                                className="w-full sm:w-auto"
                             >
-                                <Ban className="h-4 w-4 mr-2" />
-                                Revoke
+                                <Ban className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Revoke</span>
                             </Button>
                         </div>
                     )}
 
                     {isRevoked && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                             <Button
                                 variant="outline"
                                 onClick={handleRegenerate}
                                 disabled={submitting}
+                                className="w-full sm:w-auto"
                             >
                                 {submitting ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
                                 ) : (
-                                    <RotateCcw className="h-4 w-4 mr-2" />
+                                    <RotateCcw className="h-4 w-4 sm:mr-2" />
                                 )}
-                                Regenerate
+                                <span className="hidden sm:inline">Regenerate</span>
                             </Button>
                         </div>
                     )}

@@ -112,14 +112,14 @@ export default function Show({ template, preview }: { template: Template; previe
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href={route('templates.designer', template.id)}>
-                            <Button variant="outline">
-                                <Pencil className="h-4 w-4" />
-                                Edit Design
+                            <Button variant="outline" size="sm">
+                                <Pencil className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Edit Design</span>
                             </Button>
                         </Link>
-                        <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-                            <Trash2 className="h-4 w-4" />
-                            Delete
+                        <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+                            <Trash2 className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Delete</span>
                         </Button>
                     </div>
                 </div>

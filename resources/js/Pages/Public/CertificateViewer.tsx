@@ -59,7 +59,7 @@ export default function CertificateViewer({
                             {pdfUrl ? (
                                 <iframe
                                     src={pdfUrl}
-                                    className="h-[600px] w-full border-0"
+                                    className="h-[400px] sm:h-[600px] w-full border-0"
                                     title="Certificate PDF"
                                 />
                             ) : (

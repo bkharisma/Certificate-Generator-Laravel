@@ -164,7 +164,7 @@ export default function Edit({ project, templates }: { project: Project; templat
                                 {errors.certificate_date && <p className="text-sm text-destructive">{errors.certificate_date}</p>}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="certificate_prefix">Number Prefix</Label>
                                     <Input

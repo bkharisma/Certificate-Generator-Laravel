@@ -623,20 +623,20 @@ export default function Show({
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href={route('projects.edit', project.id)}>
-                            <Button variant="outline">
-                                <Pencil className="h-4 w-4" />
-                                Edit
+                            <Button variant="outline" size="sm">
+                                <Pencil className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Edit</span>
                             </Button>
                         </Link>
-                        <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-                            <Trash2 className="h-4 w-4" />
-                            Delete
+                        <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+                            <Trash2 className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Delete</span>
                         </Button>
                     </div>
                 </div>
 
                 <Tabs defaultValue="overview" className="space-y-4">
-                    <TabsList>
+                    <TabsList className="overflow-x-auto flex-nowrap w-full justify-start">
                         <TabsTrigger value="overview">Overview</TabsTrigger>
                         <TabsTrigger value="signatures">
                             <Pen className="h-4 w-4" />
@@ -1100,22 +1100,22 @@ export default function Show({
                     </TabsContent>
 
                     <TabsContent value="recipients" className="space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                             <p className="text-sm text-muted-foreground">
                                 {project.recipients_count} recipient(s) total
                             </p>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => window.open(route('recipients.template'), '_blank')}>
-                                    <Download className="h-3 w-3" />
-                                    Template
+                                    <Download className="h-3 w-3 sm:mr-1" />
+                                    <span className="hidden sm:inline">Template</span>
                                 </Button>
                                 <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
-                                    <FileSpreadsheet className="h-3 w-3" />
-                                    Import Excel
+                                    <FileSpreadsheet className="h-3 w-3 sm:mr-1" />
+                                    <span className="hidden sm:inline">Import Excel</span>
                                 </Button>
                                 <Button size="sm" onClick={() => openRecipientModal()}>
-                                    <Plus className="h-3 w-3" />
-                                    Add Recipient
+                                    <Plus className="h-3 w-3 sm:mr-1" />
+                                    <span className="hidden sm:inline">Add Recipient</span>
                                 </Button>
                             </div>
                         </div>
@@ -1133,7 +1133,55 @@ export default function Show({
                         ) : (
                             <Card>
                                 <CardContent className="p-0">
-                                    <table className="w-full text-sm">
+                                    {/* Mobile card view */}
+                                    <div className="divide-y md:hidden">
+                                        {recipients.data.map((r) => (
+                                            <div key={r.id} className="p-4 space-y-3">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-medium truncate">{r.name}</p>
+                                                        <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        {['pending', 'revoked'].includes(r.status) && (
+                                                            <>
+                                                                <Button variant="ghost" size="icon-sm" onClick={() => openRecipientModal(r)}>
+                                                                    <Edit className="h-3 w-3" />
+                                                                </Button>
+                                                                <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteRecipient(r)} className="text-destructive hover:text-destructive">
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Cert. No.</p>
+                                                        <p className="font-mono text-xs truncate">{r.certificate_number}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Status</p>
+                                                        <Badge variant="outline" className={`${STATUS_BADGE[r.status] || ''} text-xs`}>
+                                                            {r.status === 'pending' && <AlertCircle className="h-3 w-3 mr-1 inline" />}
+                                                            {r.status === 'generated' && <CheckCircle2 className="h-3 w-3 mr-1 inline" />}
+                                                            {r.status === 'sent' && <Mail className="h-3 w-3 mr-1 inline" />}
+                                                            {r.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Email</p>
+                                                        <Badge variant="outline" className={`${EMAIL_STATUS_BADGE[r.email_status] || ''} text-xs`}>
+                                                            {r.email_status}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Desktop table view */}
+                                    <table className="hidden md:table w-full text-sm">
                                         <thead>
                                             <tr className="border-b">
                                                 <th className="text-left p-3 font-medium text-muted-foreground">Name</th>
@@ -1447,8 +1495,8 @@ export default function Show({
                                     </div>
                                     <div className="space-y-4">
                                         <Label>Background Image (optional)</Label>
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex-1">
+                                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                                            <div className="w-full sm:flex-1">
                                                 <input
                                                     ref={bgFileRef}
                                                     type="file"
@@ -1593,27 +1641,31 @@ export default function Show({
                     <TabsContent value="generate" className="space-y-4">
                         <Card>
                             <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <h3 className="font-semibold">Certificate Generation</h3>
-                                        <p className="text-sm text-muted-foreground">
-                                            Generate PDF certificates and send emails to recipients.
-                                        </p>
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div className="space-y-1">
+                                            <h3 className="font-semibold">Certificate Generation</h3>
+                                            <p className="text-sm text-muted-foreground">
+                                                Generate PDF certificates and send emails to recipients.
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <Badge variant="outline" className="text-xs">
+                                                {recipients.data.filter(r => r.status === 'pending').length} pending
+                                            </Badge>
+                                            <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-200">
+                                                {recipients.data.filter(r => r.status === 'generated' || r.status === 'sent').length} generated
+                                            </Badge>
+                                            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-200">
+                                                {recipients.data.filter(r => r.email_status === 'pending' && (r.status === 'generated' || r.status === 'sent')).length} pending email
+                                            </Badge>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="text-xs">
-                                            {recipients.data.filter(r => r.status === 'pending').length} pending
-                                        </Badge>
-                                        <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-200">
-                                            {recipients.data.filter(r => r.status === 'generated' || r.status === 'sent').length} generated
-                                        </Badge>
-                                        <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-200">
-                                            {recipients.data.filter(r => r.email_status === 'pending' && (r.status === 'generated' || r.status === 'sent')).length} pending email
-                                        </Badge>
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <Link href={route('templates.designer', project.template.id)}>
                                             <Button variant="outline" size="sm">
-                                                <Pencil className="h-3 w-3 mr-1" />
-                                                Edit Template
+                                                <Pencil className="h-3 w-3 sm:mr-1" />
+                                                <span className="hidden sm:inline">Edit Template</span>
                                             </Button>
                                         </Link>
                                         {recipients.data.some(r => r.status === 'generated' || r.status === 'sent' || r.status === 'revoked') && (
@@ -1637,18 +1689,18 @@ export default function Show({
                                                 }}
                                             >
                                                 {regeneratingAll ? (
-                                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                                    <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" />
                                                 ) : (
-                                                    <RotateCcw className="h-3 w-3 mr-1" />
+                                                    <RotateCcw className="h-3 w-3 sm:mr-1" />
                                                 )}
-                                                Regenerate All
+                                                <span className="hidden sm:inline">Regenerate All</span>
                                             </Button>
                                         )}
                                         {recipients.data.some(r => r.status === 'generated' || r.status === 'sent') && (
                                             <a href={route('projects.download-zip', project.id)}>
                                                 <Button variant="outline" size="sm">
-                                                    <Download className="h-3 w-3 mr-1" />
-                                                    Download All
+                                                    <Download className="h-3 w-3 sm:mr-1" />
+                                                    <span className="hidden sm:inline">Download All</span>
                                                 </Button>
                                             </a>
                                         )}
@@ -1662,8 +1714,8 @@ export default function Show({
                                                     setRevokeAllReason('');
                                                 }}
                                             >
-                                                <Ban className="h-3 w-3 mr-1" />
-                                                Revoke All
+                                                <Ban className="h-3 w-3 sm:mr-1" />
+                                                <span className="hidden sm:inline">Revoke All</span>
                                             </Button>
                                         )}
                                     </div>
@@ -1683,17 +1735,15 @@ export default function Show({
                                             Click the button below to generate all pending certificates. Emails will be queued automatically.
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                                         <Button
                                             variant="outline"
-                                            size="lg"
                                             onClick={() => window.open(route('projects.preview', project.id), '_blank')}
                                         >
                                             <Eye className="h-4 w-4 mr-2" />
-                                            Preview Sample
+                                            Preview
                                         </Button>
                                         <Button
-                                            size="lg"
                                             disabled={generating}
                                             onClick={() => {
                                                 setGenerating(true);
@@ -1718,7 +1768,7 @@ export default function Show({
                                             ) : (
                                                 <>
                                                     <Play className="h-4 w-4 mr-2" />
-                                                    Generate All Certificates
+                                                    Generate All
                                                 </>
                                             )}
                                         </Button>
@@ -1739,17 +1789,15 @@ export default function Show({
                                             Use Regenerate All after editing the template, or preview a sample first.
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                                         <Button
                                             variant="outline"
-                                            size="lg"
                                             onClick={() => window.open(route('projects.preview', project.id), '_blank')}
                                         >
                                             <Eye className="h-4 w-4 mr-2" />
-                                            Preview Sample
+                                            Preview
                                         </Button>
                                         <Button
-                                            size="lg"
                                             onClick={() => {
                                                 setRegeneratingAll(true);
                                                 router.post(route('projects.regenerate-all', project.id), {}, {
@@ -1814,7 +1862,125 @@ export default function Show({
                         {recipients.data.length > 0 && (
                             <Card>
                                 <CardContent className="p-0">
-                                    <table className="w-full text-sm">
+                                    {/* Mobile card view */}
+                                    <div className="divide-y md:hidden">
+                                        {recipients.data.map((r) => (
+                                            <div key={r.id} className="p-4 space-y-3">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-medium truncate">{r.name}</p>
+                                                    </div>
+                                                    <Badge variant="outline" className={`${STATUS_BADGE[r.status] || ''} shrink-0`}>
+                                                        {r.status === 'pending' && <AlertCircle className="h-3 w-3 mr-1 inline" />}
+                                                        {r.status === 'generated' && <CheckCircle2 className="h-3 w-3 mr-1 inline" />}
+                                                        {r.status === 'sent' && <Mail className="h-3 w-3 mr-1 inline" />}
+                                                        {r.status === 'revoked' && <AlertCircle className="h-3 w-3 mr-1 inline" />}
+                                                        {r.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Cert. No.</p>
+                                                        <p className="font-mono text-xs">{r.certificate_number}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Email</p>
+                                                        <Badge variant="outline" className={`${EMAIL_STATUS_BADGE[r.email_status] || ''} text-xs`}>
+                                                            {r.email_status === 'pending' && 'Pending'}
+                                                            {r.email_status === 'sent' && 'Sent'}
+                                                            {r.email_status === 'failed' && 'Failed'}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+                                                    {r.status === 'pending' && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            disabled={generating}
+                                                            onClick={() => {
+                                                                setGenerating(true);
+                                                                router.post(route('projects.generate.single', [project.id, r.id]), {}, {
+                                                                    preserveScroll: true,
+                                                                    onSuccess: () => {
+                                                                        setGenerating(false);
+                                                                        toast.success(`Certificate generated for ${r.name}.`);
+                                                                    },
+                                                                    onError: () => {
+                                                                        setGenerating(false);
+                                                                        toast.error('Failed to generate certificate.');
+                                                                    },
+                                                                });
+                                                            }}
+                                                        >
+                                                            <Zap className="h-3 w-3 sm:mr-1" />
+                                                            <span className="hidden sm:inline">Generate</span>
+                                                        </Button>
+                                                    )}
+                                                    {(r.status === 'generated' || r.status === 'sent') && (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => window.open(`/cert/${r.certificate_number}?download=1`, '_blank')}
+                                                            >
+                                                                <Download className="h-3 w-3 sm:mr-1" />
+                                                                <span className="hidden sm:inline">PDF</span>
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                disabled={sendingEmail}
+                                                                onClick={() => handleSendEmail(r.id, r.name)}
+                                                            >
+                                                                <Send className="h-3 w-3 sm:mr-1" />
+                                                                <span className="hidden sm:inline">{r.email_status === 'failed' ? 'Resend' : r.email_status === 'sent' ? 'Resend' : 'Send'}</span>
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive"
+                                                                onClick={() => {
+                                                                    setRevokeModal({ open: true, recipient: r });
+                                                                    setRevokeReason('');
+                                                                }}
+                                                            >
+                                                                <Ban className="h-3 w-3 sm:mr-1" />
+                                                                <span className="hidden sm:inline">Revoke</span>
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                    {r.status === 'revoked' && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            disabled={generating}
+                                                            onClick={() => {
+                                                                setGenerating(true);
+                                                                router.post(route('projects.regenerate', [project.id, r.id]), {}, {
+                                                                    preserveScroll: true,
+                                                                    onSuccess: () => {
+                                                                        setGenerating(false);
+                                                                        toast.success(`Certificate regenerated for ${r.name}.`);
+                                                                    },
+                                                                    onError: () => {
+                                                                        setGenerating(false);
+                                                                        toast.error('Failed to regenerate certificate.');
+                                                                    },
+                                                                });
+                                                            }}
+                                                        >
+                                                            <RotateCcw className="h-3 w-3 sm:mr-1" />
+                                                            <span className="hidden sm:inline">Regenerate</span>
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Desktop table view */}
+                                    <table className="hidden md:table w-full text-sm">
                                         <thead>
                                             <tr className="border-b">
                                                 <th className="text-left p-3 font-medium text-muted-foreground">Name</th>

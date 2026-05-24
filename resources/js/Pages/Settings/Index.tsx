@@ -197,7 +197,7 @@ export default function Index({ settings }: { settings: Settings }) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Mailer</Label>
                                     <Select value={mailMailer} onValueChange={(v) => v && setMailMailer(v)}>
@@ -226,8 +226,8 @@ export default function Index({ settings }: { settings: Settings }) {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-2 col-span-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Label>SMTP Host</Label>
                                     <Input
                                         value={mailHost}
@@ -269,7 +269,7 @@ export default function Index({ settings }: { settings: Settings }) {
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>From Address</Label>
                                     <Input
@@ -294,21 +294,23 @@ export default function Index({ settings }: { settings: Settings }) {
 
                             <div className="pt-2 border-t">
                                 <Label>Test Email</Label>
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex flex-col sm:flex-row gap-2 mt-2">
                                     <Input
                                         type="email"
                                         value={testEmail}
                                         onChange={(e) => setTestEmail(e.target.value)}
                                         placeholder="recipient@example.com"
+                                        className="flex-1"
                                     />
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={handleTestMail}
                                         disabled={testingMail}
+                                        className="sm:w-auto"
                                     >
-                                        <Send className="h-4 w-4 mr-1" />
-                                        {testingMail ? 'Sending...' : 'Test'}
+                                        <Send className="h-4 w-4 sm:mr-1" />
+                                        <span className="hidden sm:inline">{testingMail ? 'Sending...' : 'Test'}</span>
                                     </Button>
                                 </div>
                             </div>

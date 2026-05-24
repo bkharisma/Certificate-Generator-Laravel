@@ -164,8 +164,8 @@ export default function Index({ users, availableRoles }: { users: PaginatedData;
                     <div className="flex items-center gap-2">
                         <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
                             <Button variant="outline" onClick={() => setBulkOpen(true)}>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Bulk Add
+                                <Upload className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Bulk Add</span>
                             </Button>
                             <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                                 <DialogHeader>
@@ -233,8 +233,8 @@ export default function Index({ users, availableRoles }: { users: PaginatedData;
 
                         <Dialog open={addOpen} onOpenChange={setAddOpen}>
                             <Button onClick={() => setAddOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add User
+                                <Plus className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Add User</span>
                             </Button>
                             <DialogContent>
                                 <DialogHeader>
@@ -293,67 +293,120 @@ export default function Index({ users, availableRoles }: { users: PaginatedData;
                 </div>
 
                 <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Role</TableHead>
-                                <TableHead>Joined</TableHead>
-                                <TableHead className="w-[120px]">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.data.length === 0 ? (
+                    {/* Mobile card view */}
+                    <div className="divide-y md:hidden">
+                        {users.data.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                <UsersIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                                <p className="text-sm">No users found</p>
+                            </div>
+                        ) : (
+                            users.data.map((user) => (
+                                <div key={user.id} className="p-4 space-y-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-medium truncate">{user.name}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setResetOpen(user.id);
+                                                    setResetPassword('');
+                                                    setResetConfirm('');
+                                                }}
+                                            >
+                                                <KeyRound className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-destructive hover:text-destructive"
+                                                onClick={() => setDeleteId(user.id)}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {user.roles.map((role) => (
+                                            <Badge key={role.id} variant="outline">
+                                                {role.name}
+                                            </Badge>
+                                        ))}
+                                        <span className="text-xs text-muted-foreground ml-auto">{user.created_at}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Desktop table view */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                        <UsersIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                                        No users found
-                                    </TableCell>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Joined</TableHead>
+                                    <TableHead className="w-[120px]">Actions</TableHead>
                                 </TableRow>
-                            ) : (
-                                users.data.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="font-medium">{user.name}</TableCell>
-                                        <TableCell>{user.email}</TableCell>
-                                        <TableCell>
-                                            {user.roles.map((role) => (
-                                                <Badge key={role.id} variant="outline" className="mr-1">
-                                                    {role.name}
-                                                </Badge>
-                                            ))}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {user.created_at}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setResetOpen(user.id);
-                                                        setResetPassword('');
-                                                        setResetConfirm('');
-                                                    }}
-                                                >
-                                                    <KeyRound className="h-3.5 w-3.5" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-destructive hover:text-destructive"
-                                                    onClick={() => setDeleteId(user.id)}
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {users.data.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                            <UsersIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                                            No users found
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : (
+                                    users.data.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell className="font-medium">{user.name}</TableCell>
+                                            <TableCell>{user.email}</TableCell>
+                                            <TableCell>
+                                                {user.roles.map((role) => (
+                                                    <Badge key={role.id} variant="outline" className="mr-1">
+                                                        {role.name}
+                                                    </Badge>
+                                                ))}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {user.created_at}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setResetOpen(user.id);
+                                                            setResetPassword('');
+                                                            setResetConfirm('');
+                                                        }}
+                                                    >
+                                                        <KeyRound className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-destructive hover:text-destructive"
+                                                        onClick={() => setDeleteId(user.id)}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
 
                 {users.last_page > 1 && (
