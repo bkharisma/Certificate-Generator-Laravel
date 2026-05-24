@@ -106,24 +106,28 @@ function SidebarContent({ currentPath, user, app }: { currentPath: string; user:
                 ))}
             </nav>
 
-            <Separator />
+            {isAdmin && (
+                <>
+                    <Separator />
 
-            <nav className="space-y-1 px-2 py-4">
-                {bottomNavItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                            currentPath === item.href
-                                ? 'bg-accent text-accent-foreground'
-                                : 'text-muted-foreground'
-                        }`}
-                    >
-                        {item.icon}
-                        {item.label}
-                    </Link>
-                ))}
-            </nav>
+                    <nav className="space-y-1 px-2 py-4">
+                        {bottomNavItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                                    currentPath === item.href
+                                        ? 'bg-accent text-accent-foreground'
+                                        : 'text-muted-foreground'
+                                }`}
+                            >
+                                {item.icon}
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
+                </>
+            )}
         </div>
     );
 }
@@ -167,27 +171,22 @@ export default function AuthenticatedLayout({
                         </div>
 
                         <DropdownMenu>
-                            <DropdownMenuTrigger
-                                className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
-                                render={
-                                    <>
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarFallback className="text-xs">
-                                                {user.name
-                                                    .split(' ')
-                                                    .map((n: string) => n[0])
-                                                    .join('')
-                                                    .toUpperCase()
-                                                    .slice(0, 2)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span className="hidden font-medium sm:inline-block">
-                                            {user.name}
-                                        </span>
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                    </>
-                                }
-                            />
+                            <DropdownMenuTrigger className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="text-xs">
+                                        {user.name
+                                            .split(' ')
+                                            .map((n: string) => n[0])
+                                            .join('')
+                                            .toUpperCase()
+                                            .slice(0, 2)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="hidden font-medium sm:inline-block">
+                                    {user.name}
+                                </span>
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
                                 <div className="flex items-center gap-2 p-2">
                                     <div className="flex flex-col space-y-1">
