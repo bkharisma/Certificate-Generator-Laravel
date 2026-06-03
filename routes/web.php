@@ -15,8 +15,14 @@ use Inertia\Inertia;
 
 Route::get('/cert/{certificateNumber}', [CertificateController::class, 'show'])->middleware('throttle:30,1')->where('certificateNumber', '.*')->name('cert.show');
 
+Route::get('/home', function () {
+    return Inertia::render('Public/Home', [
+        'orgName' => \App\Models\Setting::get('org_name', config('app.name')),
+    ]);
+})->name('home');
+
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return redirect('/home');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

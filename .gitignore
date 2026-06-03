@@ -99,3 +99,5 @@ Homestead.yaml
 
 # PHPUnit
 .phpunit.result.cache
+# Added by code-review-graph
+.code-review-graph/
